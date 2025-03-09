@@ -1,5 +1,6 @@
 {
   "name": "gow-2025-astra-lumina-dream-explorer",
+  "homepage": "https://Kazenoyama.github.io/GoW-2025-Astra-Lumina-Dream-Explorer/",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,10 +8,11 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "predeploy" : "npm run build",
+    "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },
   "devDependencies": {
+    "gh-pages": "^6.3.0",
     "typescript": "~5.7.2",
     "vite": "^6.2.0"
   }
