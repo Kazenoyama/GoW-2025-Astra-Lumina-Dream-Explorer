@@ -19,6 +19,7 @@ class Playground {
         // Move the sphere upward 1/2 its height
         sphere.position.y = 1;
         // Our built-in 'ground' shape. Params: name, options, scene
+        // @ts-ignore
         const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 6, height: 6}, scene);
         return scene;
     }
