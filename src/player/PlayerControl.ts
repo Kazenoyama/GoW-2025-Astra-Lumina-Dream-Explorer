@@ -8,6 +8,7 @@ export class PlayerControl {
     private moveSpeed: number = 1.2; // Movement speed
     private jumpForce: number = 10;
     private canJump: boolean = true;
+    private isJumping: boolean = false; // New variable to track jump state
     private frictionForce: number = 0.95; // Friction coefficient
     private stopFrictionForce: number = 0.5;
     private keysPressed: Set<string> = new Set();
@@ -23,10 +24,8 @@ export class PlayerControl {
     constructor(scene: BABYLON.Scene, physicsManager: PhysicsManager) {
         this.scene = scene;
         this.physicsManager = physicsManager;
-        
         this.playerSphere = this.scene.getMeshByName("sphere") as BABYLON.Mesh;
         this.setupPlayerControls();
-        
         this.scene.registerBeforeRender(() => {
             this.checkGroundContact();
             this.updateMovementState();
@@ -41,20 +40,29 @@ export class PlayerControl {
      */
     private setupPlayerControls(): void {
         this.scene.onKeyboardObservable.add((kbInfo) => {
-            const key = kbInfo.event.key.toLowerCase();
-            
+            const keyEvent = kbInfo.event;
+            const key = keyEvent.key.toLowerCase();
             switch (kbInfo.type) {
                 case BABYLON.KeyboardEventTypes.KEYDOWN:
                     this.keysPressed.add(key);
-                    
-                    if (key === ' ' && this.canJump) {
+                    // Check if it's spacebar AND player can jump AND is not currently jumping
+                    if ((key === ' ' || keyEvent.code === 'Space') && this.canJump && !this.isJumping) {
                         const jumpImpulse = new BABYLON.Vector3(0, this.jumpForce, 0);
                         this.physicsManager.applyImpulse(this.playerSphere, jumpImpulse);
                         this.canJump = false;
+                        this.isJumping = true; // Set jumping state to true
+                        console.log("Jump initiated!");
                     }
                     break;
+                    
                 case BABYLON.KeyboardEventTypes.KEYUP:
                     this.keysPressed.delete(key);
+                    
+                    // Reset jumping state when spacebar is released
+                    if (key === ' ' || keyEvent.code === 'Space') {
+                        this.isJumping = false;
+                        console.log("Space released, can jump again when on ground");
+                    }
                     break;
             }
         });
@@ -72,19 +80,15 @@ export class PlayerControl {
      */
     private applyMovement(): void {
         if (!this.playerSphere.physicsImpostor) return;
-        
         const impulseDirection = new BABYLON.Vector3(0, 0, 0);
-        
         if (this.keysPressed.has('z')) impulseDirection.z += this.moveSpeed;
         if (this.keysPressed.has('s')) impulseDirection.z -= this.moveSpeed;
         if (this.keysPressed.has('q')) impulseDirection.x -= this.moveSpeed;
         if (this.keysPressed.has('d')) impulseDirection.x += this.moveSpeed;
-        
         if (impulseDirection.length() > 0) {
             const cameraRotationY = (this.scene.activeCamera as BABYLON.FreeCamera)?.rotation.y || 0;
             const rotationMatrix = BABYLON.Matrix.RotationY(cameraRotationY);
             const transformedImpulse = BABYLON.Vector3.TransformNormal(impulseDirection, rotationMatrix);
-            
             this.physicsManager.applyImpulse(this.playerSphere, transformedImpulse);
         }
     }
@@ -98,7 +102,6 @@ export class PlayerControl {
             const velocity = this.playerSphere.physicsImpostor.getLinearVelocity();
             if (velocity) {
                 const horizontalSpeed = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
-                
                 if (horizontalSpeed > this.maxVelocity) {
                     const scale = this.maxVelocity / horizontalSpeed;
                     velocity.x *= scale;
@@ -115,11 +118,9 @@ export class PlayerControl {
     private applyFriction(): void {
         if (this.playerSphere.physicsImpostor && this.canJump) {
             const currentVelocity = this.playerSphere.physicsImpostor.getLinearVelocity();
-            
             if (currentVelocity) {
                 // Apply stronger friction when no movement keys are pressed
                 const friction = this.movementKeysReleased ? this.stopFrictionForce : this.frictionForce;
-                
                 const horizontalVelocity = new BABYLON.Vector3(
                     currentVelocity.x * friction,
                     currentVelocity.y,
@@ -132,9 +133,9 @@ export class PlayerControl {
                 if (Math.abs(horizontalVelocity.x) < this.stopThreshold && 
                     Math.abs(horizontalVelocity.z) < this.stopThreshold && 
                     this.movementKeysReleased) {
-                    horizontalVelocity.x = 0;
-                    horizontalVelocity.z = 0;
-                    this.playerSphere.physicsImpostor.setLinearVelocity(horizontalVelocity);
+                        horizontalVelocity.x = 0;
+                        horizontalVelocity.z = 0;
+                        this.playerSphere.physicsImpostor.setLinearVelocity(horizontalVelocity);
                 }
             }
         }

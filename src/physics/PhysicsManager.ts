@@ -30,8 +30,8 @@ export class PhysicsManager {
      * @param type The type of physics impostor
      * @param options The physics options
      */
-    public addImpostor(mesh: AbstractMesh, type: number, options: { mass: number, restitution?: number, friction?: number }): void {
-        mesh.physicsImpostor = new PhysicsImpostor(
+    public addImpostor(mesh: AbstractMesh, type: number, options: { mass: number, restitution?: number, friction?: number }): void {mesh.physicsImpostor = new PhysicsImpostor
+        (
             mesh,
             type,
             options,
@@ -48,10 +48,7 @@ export class PhysicsManager {
     public applyImpulse(mesh: AbstractMesh,direction: Vector3,contactPoint?: Vector3): void 
     {
         if (mesh.physicsImpostor) {
-            mesh.physicsImpostor.applyImpulse(
-                direction,
-                contactPoint || mesh.position
-            );
+            mesh.physicsImpostor.applyImpulse(direction,contactPoint || mesh.position);
         }
     }
     
@@ -61,14 +58,17 @@ export class PhysicsManager {
      * @param groundName The name of the ground mesh
      * @param distance The distance to check from the mesh
      */
-    public isGrounded(mesh: AbstractMesh, groundName: string = "ground",distance: number = 1.1): boolean
-     {
+    public isGrounded(mesh: AbstractMesh, groundName: string = "ground", distance: number = 1.5): boolean {
         const origin = mesh.position.clone();
+        
+        
+        const rayStart = new Vector3(origin.x, origin.y + 0.1, origin.z);
         const direction = new Vector3(0, -1, 0);
-        const ray = new Ray(origin, direction, distance);
+        const ray = new Ray(rayStart, direction, distance);
         const hit = this.scene.pickWithRay(ray);
         
-        return !!hit?.hit && hit.pickedMesh?.name === groundName;
+       
+        return !!hit?.hit;
     }
     
     /**
