@@ -7,19 +7,33 @@ export class CameraPlayer {
     private canvas: HTMLCanvasElement;
     private playerControl: PlayerControl;
     private keysPressed: { [key: string]: boolean } = {};
-    private targetRotation: number | null = null;
-    private rotationSpeed: number = 0.05; 
     
+    // Variables for mouse camera control
+    private isPointerLocked: boolean = false;
+    private mouseSensitivity: number = 0.002; // Mouse sensitivity
+    private previousMouseX: number = 0;
+    private cameraHeight: number = 2; // Camera height (reduced from previous value of 3)
+    private cameraDistance: number = 4.5; // Adjusted distance (previously 5)
+    
+    /**
+     * Creates a new camera controller that follows the player
+     * @param scene The Babylon scene
+     * @param canvas The HTML canvas element
+     * @param playerControl The player control instance
+     */
     constructor(scene: BABYLON.Scene, canvas: HTMLCanvasElement, playerControl: PlayerControl) {
         this.scene = scene;
         this.canvas = canvas;
         this.playerControl = playerControl;
         
-        // Create a camera that follows the player
-        this.camera = new BABYLON.FreeCamera("playerCamera", new BABYLON.Vector3(0, 3, -5), this.scene);
+        // Create camera that follows the player
+        this.camera = new BABYLON.FreeCamera("playerCamera", new BABYLON.Vector3(0, 2, -4.5), this.scene);
         this.camera.attachControl(this.canvas, true);
         
-        // Set up input handling (ONLY ONCE, not every frame)
+        // Disable default camera controls
+        this.camera.inputs.clear();
+        
+        // Set up input handling
         this.setupInputHandling();
         
         // Update camera position on each frame
@@ -28,73 +42,62 @@ export class CameraPlayer {
         });
     }
     
+    /**
+     * Set up keyboard and mouse input handling
+     */
     private setupInputHandling(): void {
+        // Handle keyboard inputs (for other functions if needed)
         window.addEventListener('keydown', (event) => {
             this.keysPressed[event.key.toLowerCase()] = true;
         });       
         window.addEventListener('keyup', (event) => {
             this.keysPressed[event.key.toLowerCase()] = false;
         });
+        
+        // Set up pointer lock for mouse camera control
+        this.canvas.addEventListener('click', () => {
+            if (!this.isPointerLocked) {
+                this.canvas.requestPointerLock = this.canvas.requestPointerLock || 
+                                               (this.canvas as any).mozRequestPointerLock ||
+                                               (this.canvas as any).webkitRequestPointerLock;
+                this.canvas.requestPointerLock();
+            }
+        });
+        
+        // Event to detect pointer lock state
+        document.addEventListener('pointerlockchange', () => {
+            this.isPointerLocked = document.pointerLockElement === this.canvas;
+            this.previousMouseX = 0; // Reset previous position
+        });
+        
+        // Handle mouse movement for camera rotation
+        document.addEventListener('mousemove', (event) => {
+            if (this.isPointerLocked) {
+                // Horizontal mouse movement for rotation
+                const deltaX = event.movementX || 0;
+                
+                // Apply rotation based on mouse movement
+                this.camera.rotation.y += deltaX * this.mouseSensitivity;
+                
+                // Normalize rotation angle
+                this.camera.rotation.y = this.normalizeAngle(this.camera.rotation.y);
+            }
+        });
     }
+    
+    /**
+     * Update camera position to follow player
+     */
     private updateCamera(): void {
         const playerMesh = this.playerControl.getPlayerMesh();
         if (playerMesh) {
-            // Handle rotation based on key state - only when no rotation is in progress
-            if (this.targetRotation === null) {
-                if (this.keysPressed['a']) {
-                    this.targetRotation = this.normalizeAngle(this.camera.rotation.y + Math.PI/2);
-                    // Temporarily ignore the key until it's released and pressed again
-                    this.keysPressed['a'] = false;
-                }
-                
-                if (this.keysPressed['e']) {
-                    this.targetRotation = this.normalizeAngle(this.camera.rotation.y - Math.PI/2);
-                    // Temporarily ignore the key until it's released and pressed again
-                    this.keysPressed['e'] = false;
-                    
-                }
-            }
+            // Create offset vector based on current camera rotation
+            const offsetX = Math.sin(this.camera.rotation.y) * this.cameraDistance;
+            const offsetZ = Math.cos(this.camera.rotation.y) * this.cameraDistance;
             
-            // If we have a target rotation, move towards it
-            if (this.targetRotation !== null) {
-                // Normalize current rotation
-                const normalizedCurrentRotation = this.normalizeAngle(this.camera.rotation.y);
-                
-                // Find the shortest path to rotate (clockwise or counterclockwise)
-                let angleDifference = this.targetRotation - normalizedCurrentRotation;
-                
-                // Ensure we take the shortest path around the circle
-                if (angleDifference > Math.PI) {
-                    angleDifference -= 2 * Math.PI;
-                } else if (angleDifference < -Math.PI) {
-                    angleDifference += 2 * Math.PI;
-                }
-                
-                if (Math.abs(angleDifference) < this.rotationSpeed) {
-                    // We're close enough, snap to the exact rotation
-                    this.camera.rotation.y = this.targetRotation;
-                    this.targetRotation = null; // Reset the target
-                } else if (angleDifference > 0) {
-                    this.camera.rotation.y += this.rotationSpeed;
-                } else {
-                    this.camera.rotation.y -= this.rotationSpeed;
-                }
-                
-                // Normalize the camera rotation after changes
-                this.camera.rotation.y = this.normalizeAngle(this.camera.rotation.y);
-            }
-    
-            // Create an offset vector based on the current camera rotation
-            const distance = 5;
-            const height = 3;
-            
-            // Apply rotation to calculate the camera position in a circle around the player
-            const offsetX = Math.sin(this.camera.rotation.y) * distance;
-            const offsetZ = Math.cos(this.camera.rotation.y) * distance;
-            
-            // Position camera based on player position and rotated offset
+            // Position camera based on player position and calculated offset
             this.camera.position.x = playerMesh.position.x - offsetX;
-            this.camera.position.y = playerMesh.position.y + height;
+            this.camera.position.y = playerMesh.position.y + this.cameraHeight;
             this.camera.position.z = playerMesh.position.z - offsetZ;
             
             // Always look at the player
@@ -102,9 +105,13 @@ export class CameraPlayer {
         }
     }
     
-    // Add this utility method to normalize angles between -π and π
+    /**
+     * Utility method to normalize angles between -π and π
+     * @param angle The angle to normalize in radians
+     * @returns Normalized angle
+     */
     private normalizeAngle(angle: number): number {
-        // Keep the angle between -π and π
+        // Keep angle between -π and π
         while (angle > Math.PI) {
             angle -= 2 * Math.PI;
         }
@@ -114,7 +121,10 @@ export class CameraPlayer {
         return angle;
     }
     
-    // Add this new method to expose the camera
+    /**
+     * Get the camera instance
+     * @returns The free camera instance
+     */
     public getCamera(): BABYLON.FreeCamera {
         return this.camera;
     }

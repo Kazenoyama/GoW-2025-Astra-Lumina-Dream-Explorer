@@ -98,7 +98,7 @@ export class PhysicsManager {
      */
     public createGround(
         name: string = "ground", 
-        options: { width: number, height: number } = { width: 20, height: 20 },
+        options: { width: number, height: number } = { width: 200, height: 20 },
         physicsOptions: { mass: number, restitution: number, friction: number } = { mass: 0, restitution: 0.3, friction: 0.3 }
     ): Mesh {
         const ground = MeshBuilder.CreateGround(name, options, this.scene);
