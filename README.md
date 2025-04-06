@@ -8,6 +8,16 @@ Ce projet à pour but de participer au Games on Web 2025 : "Dreamland"
 - vite
 - gh-pages to deploy
 
+# install jest and related dependencies
+```bash
+npm i -D jest ts-jest @types/jest @jest/globals
+```
+
+# Run tests
+```bash
+npm test
+```
+
 # Run the dev
 ```bash
 npm install
