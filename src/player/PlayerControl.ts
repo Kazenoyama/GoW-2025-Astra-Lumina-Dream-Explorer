@@ -1,10 +1,9 @@
 import * as BABYLON from '@babylonjs/core';
-import { PhysicsManager } from "../physics/PhysicsManager";
+import { Scene, Mesh, Ray, Vector3 } from '@babylonjs/core';
 
 export class PlayerControl {
     private playerSphere: BABYLON.Mesh;
     private scene: BABYLON.Scene;
-    private physicsManager: PhysicsManager;
     private moveSpeed: number = 1.2; // Movement speed
     private jumpForce: number = 10;
     private canJump: boolean = true;
@@ -19,12 +18,11 @@ export class PlayerControl {
     /**
      * Creates a new player control instance
      * @param scene The Babylon scene
-     * @param physicsManager The physics manager instance
+     * @param playerSphere The player sphere mesh
      */
-    constructor(scene: BABYLON.Scene, physicsManager: PhysicsManager) {
+    constructor(scene: Scene, playerSphere: Mesh) {
         this.scene = scene;
-        this.physicsManager = physicsManager;
-        this.playerSphere = this.scene.getMeshByName("sphere") as BABYLON.Mesh;
+        this.playerSphere = playerSphere;
         this.setupPlayerControls();
         this.scene.registerBeforeRender(() => {
             this.checkGroundContact();
@@ -47,8 +45,8 @@ export class PlayerControl {
                     this.keysPressed.add(key);
                     // Check if it's spacebar AND player can jump AND is not currently jumping
                     if ((key === ' ' || keyEvent.code === 'Space') && this.canJump && !this.isJumping) {
-                        const jumpImpulse = new BABYLON.Vector3(0, this.jumpForce, 0);
-                        this.physicsManager.applyImpulse(this.playerSphere, jumpImpulse);
+                        const jumpImpulse = new Vector3(0, this.jumpForce, 0);
+                        this.applyImpulse(jumpImpulse);
                         this.canJump = false;
                         this.isJumping = true; // Set jumping state to true
                         console.log("Jump initiated!");
@@ -79,8 +77,8 @@ export class PlayerControl {
      * Apply movement based on key inputs
      */
     private applyMovement(): void {
-        if (!this.playerSphere.physicsImpostor) return;
-        const impulseDirection = new BABYLON.Vector3(0, 0, 0);
+        if (!this.playerSphere.physicsBody) return;
+        const impulseDirection = new Vector3(0, 0, 0);
         if (this.keysPressed.has('z')) impulseDirection.z += this.moveSpeed;
         if (this.keysPressed.has('s')) impulseDirection.z -= this.moveSpeed;
         if (this.keysPressed.has('q')) impulseDirection.x -= this.moveSpeed;
@@ -88,25 +86,35 @@ export class PlayerControl {
         if (impulseDirection.length() > 0) {
             const cameraRotationY = (this.scene.activeCamera as BABYLON.FreeCamera)?.rotation.y || 0;
             const rotationMatrix = BABYLON.Matrix.RotationY(cameraRotationY);
-            const transformedImpulse = BABYLON.Vector3.TransformNormal(impulseDirection, rotationMatrix);
-            this.physicsManager.applyImpulse(this.playerSphere, transformedImpulse);
+            const transformedImpulse = Vector3.TransformNormal(impulseDirection, rotationMatrix);
+            this.applyImpulse(transformedImpulse);
         }
     }
     
+    /**
+     * Apply an impulse to the player
+     * @param direction The direction vector of the impulse
+     */
+    private applyImpulse(direction: Vector3): void {
+        if (this.playerSphere.physicsBody) {
+            this.playerSphere.physicsBody.applyImpulse(direction, this.playerSphere.getAbsolutePosition());
+        }
+    }
+
     /**
      * Limit the maximum horizontal velocity of the player
      */
     private limitMaxVelocity(): void {
         // Limit maximum horizontal velocity
-        if (this.playerSphere.physicsImpostor) {
-            const velocity = this.playerSphere.physicsImpostor.getLinearVelocity();
+        if (this.playerSphere.physicsBody) {
+            const velocity = this.playerSphere.physicsBody.getLinearVelocity();
             if (velocity) {
                 const horizontalSpeed = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
                 if (horizontalSpeed > this.maxVelocity) {
                     const scale = this.maxVelocity / horizontalSpeed;
                     velocity.x *= scale;
                     velocity.z *= scale;
-                    this.playerSphere.physicsImpostor.setLinearVelocity(velocity);
+                    this.playerSphere.physicsBody.setLinearVelocity(velocity);
                 }
             }
         }
@@ -116,18 +124,18 @@ export class PlayerControl {
      * Apply friction to slow down the player when on the ground
      */
     private applyFriction(): void {
-        if (this.playerSphere.physicsImpostor && this.canJump) {
-            const currentVelocity = this.playerSphere.physicsImpostor.getLinearVelocity();
+        if (this.playerSphere.physicsBody && this.canJump) {
+            const currentVelocity = this.playerSphere.physicsBody.getLinearVelocity();
             if (currentVelocity) {
                 // Apply stronger friction when no movement keys are pressed
                 const friction = this.movementKeysReleased ? this.stopFrictionForce : this.frictionForce;
-                const horizontalVelocity = new BABYLON.Vector3(
+                const horizontalVelocity = new Vector3(
                     currentVelocity.x * friction,
                     currentVelocity.y,
                     currentVelocity.z * friction
                 );
                 
-                this.playerSphere.physicsImpostor.setLinearVelocity(horizontalVelocity);
+                this.playerSphere.physicsBody.setLinearVelocity(horizontalVelocity);
                 
                 // Complete stop at threshold
                 if (Math.abs(horizontalVelocity.x) < this.stopThreshold && 
@@ -135,7 +143,7 @@ export class PlayerControl {
                     this.movementKeysReleased) {
                         horizontalVelocity.x = 0;
                         horizontalVelocity.z = 0;
-                        this.playerSphere.physicsImpostor.setLinearVelocity(horizontalVelocity);
+                        this.playerSphere.physicsBody.setLinearVelocity(horizontalVelocity);
                 }
             }
         }
@@ -145,7 +153,14 @@ export class PlayerControl {
      * Check if the player is in contact with the ground
      */
     private checkGroundContact(): void {
-        this.canJump = this.physicsManager.isGrounded(this.playerSphere);
+        // Cast a ray downward from the player sphere
+        const origin = this.playerSphere.position.clone();
+        const rayStart = new Vector3(origin.x, origin.y + 0.2, origin.z);
+        const direction = new Vector3(0, -1, 0);
+        const ray = new Ray(rayStart, direction, 1.5); // Ray length slightly larger than radius
+        const hit = this.scene.pickWithRay(ray);
+        
+        this.canJump = !!hit?.hit;
     }
     
     /**
@@ -154,5 +169,9 @@ export class PlayerControl {
      */
     public getPlayerMesh(): BABYLON.Mesh {
         return this.playerSphere;
+    }
+    
+    private setupInputs() {
+        // Your input control setup code...
     }
 }

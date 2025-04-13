@@ -1,28 +1,28 @@
-import { CannonJSPlugin, PhysicsImpostor,Scene,Vector3,AbstractMesh,Mesh,MeshBuilder, Ray} from '@babylonjs/core';
+import { HavokPlugin, PhysicsImpostor, Scene, Vector3, AbstractMesh, Mesh, MeshBuilder, Ray } from '@babylonjs/core';
+import '@babylonjs/loaders/glTF';
 
-import * as CANNON from 'cannon';
+// Import local Havok as fallback
+import HavokPhysicsLocalModule from '@babylonjs/havok';
 
-// Make CANNON available globally for the physics plugin
-(window as any).CANNON = CANNON;
+// Declare global HavokPhysics for CDN loading
+declare global {
+    const HavokPhysics: any;
+}
 
 export class PhysicsManager {
     private scene: Scene;
-    private physicsPlugin: CannonJSPlugin; 
+    private physicsPlugin: HavokPlugin | null = null;
     private gravity: Vector3;
+    private isInitialized: boolean = false;
     
     constructor(scene: Scene) {
         this.scene = scene;
         this.gravity = new Vector3(0, -9.81, 0);
-        this.physicsPlugin = new CannonJSPlugin();
     }
     
-    /**
-     * Initialize the physics engine with the scene
-     */
-    public initialize(): void {
-        this.scene.enablePhysics(this.gravity, this.physicsPlugin);
-        console.log("Physics engine initialized with Cannon.js");
-    }
+    public async getInitializedHavok() {
+        return await HavokPhysics();
+      }
     
     /**
      * Add a physics impostor to a mesh
@@ -30,13 +30,34 @@ export class PhysicsManager {
      * @param type The type of physics impostor
      * @param options The physics options
      */
-    public addImpostor(mesh: AbstractMesh, type: number, options: { mass: number, restitution?: number, friction?: number }): void {mesh.physicsImpostor = new PhysicsImpostor
-        (
-            mesh,
-            type,
-            options,
-            this.scene
-        );
+    public addImpostor(mesh: AbstractMesh, type: number, options: { mass: number, restitution?: number, friction?: number }): void {
+        // Vérifier que le plugin est initialisé
+        if (!this.isInitialized || !this.physicsPlugin || !this.scene.getPhysicsEngine()) {
+            console.error("Physics engine not initialized yet");
+            return;
+        }
+        
+        try {
+            // Safer approach - don't dispose old impostors, just create a new one if needed
+            if (!mesh.physicsImpostor) {
+                // Only create a new impostor if one doesn't already exist
+                mesh.physicsImpostor = new PhysicsImpostor(
+                    mesh,
+                    type,
+                    options,
+                    this.scene
+                );
+                console.log(`Physics impostor added to ${mesh.name}`);
+            } else {
+                // If impostor already exists, just update its properties
+                mesh.physicsImpostor.setMass(options.mass);
+                
+                
+                console.log(`Physics impostor updated for ${mesh.name}`);
+            }
+        } catch (error) {
+            console.error(`Failed to add physics impostor to ${mesh.name}:`, error);
+        }
     }
     
     /**
@@ -58,11 +79,11 @@ export class PhysicsManager {
      * @param groundName The name of the ground mesh
      * @param distance The distance to check from the mesh
      */
-    public isGrounded(mesh: AbstractMesh, groundName: string = "ground", distance: number = 1.5): boolean {
+    public isGrounded(mesh: AbstractMesh, groundName: string = "ground", distance: number = 3): boolean {
         const origin = mesh.position.clone();
         
         
-        const rayStart = new Vector3(origin.x, origin.y + 0.1, origin.z);
+        const rayStart = new Vector3(origin.x, origin.y + 0.2, origin.z);
         const direction = new Vector3(0, -1, 0);
         const ray = new Ray(rayStart, direction, distance);
         const hit = this.scene.pickWithRay(ray);
@@ -87,7 +108,7 @@ export class PhysicsManager {
     /**
      * Get the physics plugin
      */
-    public getPhysicsPlugin(): CannonJSPlugin {
+    public getPhysicsPlugin(): HavokPlugin | null {
         return this.physicsPlugin;
     }
 }

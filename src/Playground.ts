@@ -8,9 +8,9 @@ class Playground {
         // This creates a basic Babylon Scene object (non-mesh)
         const scene = new BABYLON.Scene(engine);
         
-        // Initialize physics
+        // Initialize physics and wait for it to be ready
         const physicsManager = new PhysicsManager(scene);
-        physicsManager.initialize();
+        await physicsManager.initialize();
         
         // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
         const light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
