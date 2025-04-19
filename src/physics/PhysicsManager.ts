@@ -12,17 +12,19 @@ declare global {
 export class PhysicsManager {
     private scene: Scene;
     private physicsPlugin: HavokPlugin | null = null;
-    private gravity: Vector3;
     private isInitialized: boolean = false;
     
     constructor(scene: Scene) {
-        this.scene = scene;
-        this.gravity = new Vector3(0, -9.81, 0);
+        this.scene = scene; 
     }
     
     public async getInitializedHavok() {
         return await HavokPhysics();
+        
       }
+     
+    
+
     
     /**
      * Add a physics impostor to a mesh

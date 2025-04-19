@@ -12,8 +12,8 @@ export class CameraPlayer {
     private isPointerLocked: boolean = false;
     private mouseSensitivity: number = 0.002; // Mouse sensitivity
     private previousMouseX: number = 0;
-    private cameraHeight: number = 2; // Camera height (reduced from previous value of 3)
-    private cameraDistance: number = 4.5; // Adjusted distance (previously 5)
+    private cameraHeight: number = 0.3; 
+    private cameraDistance: number = 1.5; 
     
     /**
      * Creates a new camera controller that follows the player
