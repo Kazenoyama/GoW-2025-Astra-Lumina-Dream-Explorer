@@ -35,7 +35,7 @@ export class BasicScene extends Scene {
             const havokPlugin = new HavokPlugin(true, havokInstance);
             
             // 3. Enable physics in the scene with gravity
-            this.enablePhysics(new Vector3(0, -9.81, 0), havokPlugin);
+            this.enablePhysics(new Vector3(0, -8, 0), havokPlugin);
             console.log("Physics enabled successfully");
         } catch (error) {
             console.error("Failed to initialize Havok physics:", error);
@@ -87,6 +87,7 @@ export class BasicScene extends Scene {
         
         // 7. Create the player sphere
         const sphere = MeshBuilder.CreateSphere("sphere", { diameter: 2, segments: 32 }, this);
+        sphere.scaling.setAll(0.05); // Scale down the sphere to 0.5
         sphere.position.y = mapHeight + 5; 
         
         // 8. Add physics to the sphere using PhysicsAggregate
