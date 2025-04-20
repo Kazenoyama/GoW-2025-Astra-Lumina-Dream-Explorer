@@ -81,7 +81,7 @@ export class PhysicsManager {
      * @param groundName The name of the ground mesh
      * @param distance The distance to check from the mesh
      */
-    public isGrounded(mesh: AbstractMesh, groundName: string = "ground", distance: number = 3): boolean {
+    public isGrounded(mesh: AbstractMesh, distance: number = 3): boolean {
         const origin = mesh.position.clone();
         
         
