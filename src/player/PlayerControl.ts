@@ -15,7 +15,7 @@ export class PlayerControl {
     private stopFrictionForce: number = 0.5;
     private keysPressed: Set<string> = new Set();
     private movementKeysReleased: boolean = true;
-    private maxVelocity: number = 5; // Maximum horizontal velocity
+    private maxVelocity: number = 10; // Maximum horizontal velocity
     private maxGlideVelocity: number = 6.5; // Maximum horizontal velocity while gliding
     private stopThreshold: number = 0.3; // Threshold for complete player stop
     
