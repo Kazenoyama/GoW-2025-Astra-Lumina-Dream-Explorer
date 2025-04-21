@@ -12,11 +12,11 @@ export class CameraPlayer {
     // Variables for mouse camera control
     private isPointerLocked: boolean = false;
     private mouseSensitivity: number = 0.002; // Mouse sensitivity
-    private minPitch: number = -Math.PI / 6; // -30° 
-    private maxPitch: number = Math.PI / 6;  // 30°
+    private minPitch: number = -Math.PI / 9; // -30° 
+    private maxPitch: number = Math.PI / 9;  // 30°
     
-    private cameraHeight: number = 1; 
-    private cameraDistance: number = 3; 
+    private cameraHeight: number = 5; 
+    private cameraDistance: number = 10; 
     
     // Add these instance variables to track rotation state
     private yaw: number = 0;
@@ -58,6 +58,14 @@ export class CameraPlayer {
         this.scene.registerBeforeRender(() => {
             this.updateCamera();
         });
+
+        // Activer automatiquement le pointer lock après le chargement de la scène
+        this.scene.executeWhenReady(() => {
+            // Petit délai pour s'assurer que tout est bien chargé
+            setTimeout(() => {
+                this.requestPointerLock();
+            }, 500);
+        });
     }
     
     /**
@@ -75,10 +83,7 @@ export class CameraPlayer {
         // Set up pointer lock for mouse camera control
         this.canvas.addEventListener('click', () => {
             if (!this.isPointerLocked) {
-                this.canvas.requestPointerLock = this.canvas.requestPointerLock || 
-                                               (this.canvas as any).mozRequestPointerLock ||
-                                               (this.canvas as any).webkitRequestPointerLock;
-                this.canvas.requestPointerLock();
+                this.requestPointerLock();
             }
         });
         
@@ -105,6 +110,16 @@ export class CameraPlayer {
                 this.camera.rotation.y = this.yaw;
             }
         });
+    }
+    
+    /**
+     * Helper method to request pointer lock
+     */
+    private requestPointerLock(): void {
+        this.canvas.requestPointerLock = this.canvas.requestPointerLock || 
+                                       (this.canvas as any).mozRequestPointerLock ||
+                                       (this.canvas as any).webkitRequestPointerLock;
+        this.canvas.requestPointerLock();
     }
     
     /**

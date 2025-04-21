@@ -1,4 +1,4 @@
-import { Scene, Engine, Vector3, HemisphericLight, MeshBuilder, TransformNode, PhysicsAggregate, PhysicsShapeType, ShaderMaterial, DynamicTexture, StandardMaterial, Color3, Texture } from "@babylonjs/core";
+import { Scene, Engine, Vector3, HemisphericLight, MeshBuilder, TransformNode, PhysicsAggregate, PhysicsShapeType, ShaderMaterial, DynamicTexture, StandardMaterial, Color3, Texture, Sound, CreateSoundAsync, CreateAudioEngineAsync } from "@babylonjs/core";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin"; 
 //import * as BABYLON from "babylonjs";
 
@@ -18,13 +18,31 @@ export class BasicScene extends Scene {
         super(engine);
         
     }
+    
+
+    
  
     public async createScene() {
+        const audioEngine = await CreateAudioEngineAsync();
+
+        audioEngine.volume =0.02;
+
+        const music = CreateSoundAsync("music",
+            "assets/music/music.mp3"
+        );
+       
+
+        
+        (await music).play({ loop: true,volume: 0.5 });
+
+    
+
         // Éviter la double initialisation
         if (this._isInitialized) {
             return this;
         }
         this._isInitialized = true;
+    
         
         // 1. Create light
         const light = new HemisphericLight("light1", new Vector3(0, 1, 0), this);
@@ -48,8 +66,8 @@ export class BasicScene extends Scene {
         console.log("Loading map...");
         const modelLoader = new SceneModelLoader(this);
         const worldExtends = this.getWorldExtends();
-        const _width = 400;
-        const _height = 400;
+        const _width = 300;
+        const _height = 300;
         console.log("Model loader initialized. Scene size:", { _width, _height });
         await modelLoader.appendSceneFromPath(ModelEnum.MAP);
         console.log("Map loaded successfully");
@@ -151,7 +169,7 @@ export class BasicScene extends Scene {
         
         // 7. Create the player sphere
         const sphere = MeshBuilder.CreateSphere("sphere", { diameter: 2, segments: 32 }, this);
-        sphere.scaling.setAll(0.05); // Scale down the sphere to 0.5
+        sphere.scaling.setAll(0.5); 
         sphere.position.y = mapHeight + 5; 
         
         // 8. Add physics to the sphere using PhysicsAggregate
@@ -169,6 +187,7 @@ export class BasicScene extends Scene {
             // Create a fallback if physics failed
             console.warn("Using fallback sphere without physics");
         }
+        
         
         // 9. Setup player control and camera
         const playerControl = new PlayerControl(this, sphere);
@@ -194,6 +213,10 @@ export class BasicScene extends Scene {
             const textureWidth = _width;
             const textureHeight = _height;
             const worldSize = Math.max(_width, _height);
+            
+            
+            
+            
 
             // Map world position to texture coordinates
             const x = (-sphere.position.x / worldSize + 0.5) * textureWidth; // Invert X-axis
@@ -215,6 +238,9 @@ export class BasicScene extends Scene {
 
             dynamicTexture.update();
         });
+
+      
+
         return this;
     }
  
