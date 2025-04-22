@@ -10,6 +10,8 @@ Le jeu utilise la physique Havok pour des interactions réalistes et propose une
 
 ## 🎮 Comment jouer
 
+!! important click gauche quand vous êtes sur la page blanche pour lancer babylon, puis un autre click gauche pour être locké
+
 - **Déplacement** : Utilisez les touches `Z` (avant), `S` (arrière), `Q` (gauche), `D` (droite) pour vous déplacer
 - **Caméra** : Déplacez la souris pour regarder autour de vous
 - **Exploration** : Parcourez le monde pour révéler les zones cachées - les endroits visités passeront de monochrome à coloré
