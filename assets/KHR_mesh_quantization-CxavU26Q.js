@@ -1,0 +1,2 @@
+import{X as n,V as i}from"./index-Y43AxRqe.js";const s="KHR_mesh_quantization";class o{constructor(t){this.name=s,this.enabled=t.isExtensionUsed(s)}dispose(){}}n(s);i(s,!0,e=>new o(e));export{o as KHR_mesh_quantization};
+//# sourceMappingURL=KHR_mesh_quantization-CxavU26Q.js.map
