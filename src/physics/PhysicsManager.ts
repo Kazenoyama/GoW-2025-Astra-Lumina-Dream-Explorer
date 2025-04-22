@@ -1,8 +1,7 @@
 import { HavokPlugin, PhysicsImpostor, Scene, Vector3, AbstractMesh, Mesh, MeshBuilder, Ray } from '@babylonjs/core';
 import '@babylonjs/loaders/glTF';
 
-// Import local Havok as fallback
-import HavokPhysicsLocalModule from '@babylonjs/havok';
+
 
 // Declare global HavokPhysics for CDN loading
 declare global {
@@ -23,6 +22,19 @@ export class PhysicsManager {
         
       }
      
+    // Add initialize method that was referenced in Playground.ts
+    public async initialize(): Promise<void> {
+        try {
+            const havokInstance = await HavokPhysics();
+            this.physicsPlugin = new HavokPlugin(true, havokInstance);
+            this.scene.enablePhysics(new Vector3(0, -9.81, 0), this.physicsPlugin);
+            this.isInitialized = true;
+            console.log("Physics initialized successfully");
+        } catch (error) {
+            console.error("Failed to initialize Havok physics:", error);
+            throw new Error("Physics initialization failed");
+        }
+    }
     
 
     

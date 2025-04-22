@@ -1,4 +1,4 @@
-import { Scene, Engine, Vector3, HemisphericLight, MeshBuilder, TransformNode, PhysicsAggregate, PhysicsShapeType, ShaderMaterial, DynamicTexture, StandardMaterial, Color3, Texture, Sound, CreateSoundAsync, CreateAudioEngineAsync } from "@babylonjs/core";
+import { Scene, Engine, Vector3, HemisphericLight, MeshBuilder, TransformNode, PhysicsAggregate, PhysicsShapeType, ShaderMaterial, DynamicTexture, StandardMaterial, Color3, Texture, CreateSoundAsync, CreateAudioEngineAsync } from "@babylonjs/core";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin"; 
 //import * as BABYLON from "babylonjs";
 
@@ -25,7 +25,7 @@ export class BasicScene extends Scene {
     public async createScene() {
         const audioEngine = await CreateAudioEngineAsync();
 
-        audioEngine.volume =0.02;
+        audioEngine.volume =0.09;
 
         const music = CreateSoundAsync("music",
             "assets/music/music.mp3"
@@ -65,7 +65,7 @@ export class BasicScene extends Scene {
         // 4. Load the map
         console.log("Loading map...");
         const modelLoader = new SceneModelLoader(this);
-        const worldExtends = this.getWorldExtends();
+        
         const _width = 300;
         const _height = 300;
         console.log("Model loader initialized. Scene size:", { _width, _height });
@@ -173,12 +173,13 @@ export class BasicScene extends Scene {
         sphere.position.y = mapHeight + 5; 
         
         // 8. Add physics to the sphere using PhysicsAggregate
-        let sphereAggregate;
+        
         try {
+            
             // The sphere will be dynamic with mass of 1
-            sphereAggregate = new PhysicsAggregate(sphere, PhysicsShapeType.SPHERE, { 
+            new PhysicsAggregate(sphere, PhysicsShapeType.SPHERE, { 
                 mass: 1, 
-                restitution: 0.4, 
+                restitution: 0.1, 
                 friction: 0.5 
             }, this);
             console.log("Added physics to player sphere");

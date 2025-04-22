@@ -12,7 +12,7 @@ export class PlayerControl {
     private movementKeysReleased: boolean = true;
     private maxVelocity: number = 20; // Maximum horizontal velocity
     private stopThreshold: number = 0.3; // Threshold for complete player stop
-    private groundNormal: BABYLON.Vector3 = BABYLON.Vector3.Up(); // Store ground normal
+  
     private previousPositionY: number = 0;
     private yChangeThreshold: number = 0.005; // Threshold for height change detection
     private lastLogTime: number = 0;
@@ -94,24 +94,14 @@ export class PlayerControl {
             // Logs pour déboguer
             const now = Date.now();
             if (now - this.lastLogTime > 500) {
-                const currentY = this.playerSphere.position.y;
-                const deltaY = currentY - this.previousPositionY;
+                //const currentY = this.playerSphere.position.y;
+                // const deltaY = currentY - this.previousPositionY;
               
                 this.lastLogTime = now;
             }
             
             this.applyImpulse(transformedImpulse);
         }
-    }
-    
-    /**
-     * Create a material for the player if none exists
-     */
-    private createPlayerMaterial(): void {
-        const material = new BABYLON.StandardMaterial("playerMaterial", this.scene);
-        material.diffuseColor = new BABYLON.Color3(0.2, 0.3, 0.8);
-        material.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
-        this.playerSphere.material = material;
     }
     
     /**
@@ -197,10 +187,8 @@ export class PlayerControl {
         const hit = this.scene.pickWithRay(ray);
         this.isGrounded = !!hit?.hit;
         if (this.isGrounded && hit && hit.hit && hit.getNormal(true)) {
-            this.groundNormal = hit.getNormal(true) || BABYLON.Vector3.Up();
-        } else {
-            this.groundNormal = BABYLON.Vector3.Up();
-        }
+            BABYLON.Vector3.Up();
+        } 
     }
     
     /**
