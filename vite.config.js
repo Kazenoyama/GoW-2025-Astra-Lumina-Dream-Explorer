@@ -5,6 +5,12 @@ export default defineConfig({
     ? "/GoW-2025-Astra-Lumina-Dream-Explorer/" 
     : "/",
   
+  build: {
+    // Assurez-vous que les assets sont correctement traités
+    assetsInlineLimit: 0,
+    sourcemap: true,
+  },
+  
   optimizeDeps: {
     exclude: ['@babylonjs/havok']
   },
