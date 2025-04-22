@@ -27,8 +27,9 @@ export class BasicScene extends Scene {
 
         audioEngine.volume =0.09;
 
+        // Modifiez le chemin de la musique en ajoutant le préfixe de base si nécessaire
         const music = CreateSoundAsync("music",
-            "assets/music/music.mp3"
+            import.meta.env.BASE_URL + "assets/music/music.mp3"
         );
        
 
