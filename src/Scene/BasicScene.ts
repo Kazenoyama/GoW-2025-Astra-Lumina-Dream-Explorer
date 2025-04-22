@@ -1,4 +1,4 @@
-import { Scene, Engine, Vector3, HemisphericLight, MeshBuilder, TransformNode, PhysicsAggregate, PhysicsShapeType, ShaderMaterial, DynamicTexture, StandardMaterial, Color3, Texture, CreateSoundAsync, CreateAudioEngineAsync } from "@babylonjs/core";
+import { Scene, Engine, Vector3, HemisphericLight, MeshBuilder, TransformNode, PhysicsAggregate, PhysicsShapeType, ShaderMaterial, DynamicTexture, StandardMaterial, Color3, Texture } from "@babylonjs/core";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin"; 
 //import * as BABYLON from "babylonjs";
 
@@ -23,18 +23,18 @@ export class BasicScene extends Scene {
     
  
     public async createScene() {
-        const audioEngine = await CreateAudioEngineAsync();
+        // const audioEngine = await CreateAudioEngineAsync();
 
-        audioEngine.volume =0.09;
+        // audioEngine.volume =0.09;
 
-        // Modifiez le chemin de la musique en ajoutant le préfixe de base si nécessaire
-        const music = CreateSoundAsync("music",
-            import.meta.env.BASE_URL + "assets/music/music.mp3"
-        );
+        // // Modifiez le chemin de la musique en ajoutant le préfixe de base si nécessaire
+        // const music = CreateSoundAsync("music",
+        //     import.meta.env.BASE_URL + "assets/music/music.mp3"
+        // );
        
 
         
-        (await music).play({ loop: true,volume: 0.5 });
+        // (await music).play({ loop: true,volume: 0.5 });
 
     
 
