@@ -9,6 +9,13 @@ export default defineConfig({
     // Assurez-vous que les assets sont correctement traités
     assetsInlineLimit: 0,
     sourcemap: true,
+    
+    rollupOptions: {
+      input: {
+        main: 'home.html',
+        game: 'index.html'
+      }
+    }
   },
   
   optimizeDeps: {
@@ -20,6 +27,7 @@ export default defineConfig({
       'Cross-Origin-Opener-Policy': 'same-origin',
       'Cross-Origin-Embedder-Policy': 'require-corp',
       'Access-Control-Allow-Origin': '*'
-    }
+    },
+    open: '/home.html' 
   },
 });

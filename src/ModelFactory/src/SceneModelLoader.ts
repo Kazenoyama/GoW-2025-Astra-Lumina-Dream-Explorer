@@ -1,5 +1,5 @@
 import { registerBuiltInLoaders } from "@babylonjs/loaders/dynamic";
-import { Scene, LoadSceneAsync, SceneLoader } from "@babylonjs/core";
+import { Scene, loadSceneAsync, SceneLoader } from "@babylonjs/core";
 import { ModelEnum } from "./ModelEnum";
 
 /**
@@ -43,7 +43,7 @@ export class SceneModelLoader {
 
     async loadSceneFromPath(modelEnum: ModelEnum): Promise<void> {
         try {
-            await LoadSceneAsync(modelEnum, this.scene.getEngine());
+            await loadSceneAsync(modelEnum, this.scene.getEngine());
         } catch (error) {
             throw new Error(`Failed to load model from ${modelEnum}: ${error}`);
         }
